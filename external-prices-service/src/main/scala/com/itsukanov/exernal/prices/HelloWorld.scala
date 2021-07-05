@@ -1,4 +1,4 @@
-package com.itsukanov
+package com.itsukanov.exernal.prices
 
 object HelloWorld extends App {
 
