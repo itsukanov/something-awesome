@@ -1,4 +1,4 @@
-name := "something-awesome"
+name := "tracing"
 
 version := "0.1"
 
@@ -12,10 +12,10 @@ scalacOptions in GlobalScope ++= Seq(
   "-deprecation"
 )
 
-val core = (project in file("module1"))
+val commonInfo = (project in file("common-info"))
   .settings(
-    name := "module1",
-    libraryDependencies ++= Dependencies.module1,
+    name := "common-info",
+    libraryDependencies ++= Dependencies.commonInfo,
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
   )
