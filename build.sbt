@@ -12,9 +12,9 @@ scalacOptions in GlobalScope ++= Seq(
   "-deprecation"
 )
 
-val commonInfo = (project in file("common-info"))
+val companyInfo = (project in file("company-info"))
   .settings(
-    name := "common-info",
+    name := "company-info",
     libraryDependencies ++= Dependencies.commonInfo,
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
