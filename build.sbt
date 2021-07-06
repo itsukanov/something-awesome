@@ -1,4 +1,3 @@
-import sbt.dependsOn
 
 name := "tracing"
 
@@ -51,5 +50,7 @@ val externalPricesService = (project in file("external-prices-service"))
 val entryPoint = (project in file("entry-point"))
   .settings(
     name := "entry-point",
-    libraryDependencies ++= Dependencies.commonInfo
+    libraryDependencies ++= Dependencies.commonInfo,
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
+    addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
   ).dependsOn(commonRestApi)
