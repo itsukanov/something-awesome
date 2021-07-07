@@ -2,7 +2,8 @@ package com.itsukanov.entrypoint
 
 import cats.data.Kleisli
 import cats.effect.{ContextShift, IO, Timer, _}
-import com.itsukanov.entrypoint.restapi.EntryPointRestApi
+import com.itsukanov.common.restapi.{BearerToken, RestApiServer, ServerConfig}
+import com.itsukanov.entrypoint.restapi.{EntryPointEndpoint, EntryPointRoutes}
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.`export`.CompleterConfig
 import io.janstenpickle.trace4cats.inject.EntryPoint
@@ -35,7 +36,14 @@ object EntryPointApp extends IOApp {
       ep <- entryPoint[IO](blocker, TraceProcess("entry-point-service"))
     } yield ep)
       .use { implicit ep =>
-        EntryPointRestApi[IO, Kleisli[IO, Span[IO], *]]
+        implicit val bearerToken: BearerToken = BearerToken("asd") // todo move it to the config
+
+        RestApiServer(
+          endpoints = EntryPointEndpoint.all,
+          title = "Entry point service",
+          routes = new EntryPointRoutes[IO, Kleisli[IO, Span[IO], *]],
+          config = ServerConfig("localhost", 8080)
+        )
       }
       .as(ExitCode.Success)
 
