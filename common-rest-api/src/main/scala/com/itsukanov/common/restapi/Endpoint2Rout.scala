@@ -20,6 +20,30 @@ trait Endpoint2Rout {
     def toEither = g.map(_.asRight[ApiError])
   }
 
+  def toRoutes0[
+    O,
+    F[_] : Concurrent : ContextShift : Timer,
+    G[_] : BracketThrow : Trace
+  ](
+     endpoint: Endpoint[(Headers, BearerToken), ApiError, O, Fs2Streams[F] with WebSockets]
+   )(f: => G[Either[ApiError, O]])
+   (implicit authToken: BearerToken,
+    serverOptions: Http4sServerOptions[F, F],
+    entryPoint: EntryPoint[F],
+    P: Provide[F, G, Span[F]]
+   ): HttpRoutes[F] = {
+    val serverEndpoint = endpoint.serverLogic {
+      case (_, bearerToken) =>
+        if (bearerToken == authToken) f
+        else ApiError.InvalidBearerToken.asLeft[O].pure[G]
+    }.inject(
+      entryPoint,
+      _._1
+    )
+
+    Http4sServerInterpreter.toRoutes(serverEndpoint)
+  }
+
   def toRoutes1[
     I, O,
     F[_] : Concurrent : ContextShift : Timer,
@@ -44,7 +68,7 @@ trait Endpoint2Rout {
     Http4sServerInterpreter.toRoutes(serverEndpoint)
   }
 
-  def toRoutes3[
+  def toRoutes3[ // todo can it be deleted?
     I1, I2, I3, O, // todo how to solve a common case instead of "I1, I2, I3"?
     F[_] : Concurrent : ContextShift : Timer,
     G[_] : BracketThrow : Trace

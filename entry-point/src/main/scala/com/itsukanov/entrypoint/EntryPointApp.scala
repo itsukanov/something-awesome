@@ -2,7 +2,7 @@ package com.itsukanov.entrypoint
 
 import cats.data.Kleisli
 import cats.effect.{ContextShift, IO, Timer, _}
-import com.itsukanov.entrypoint.restapi.EntryPointRouts
+import com.itsukanov.entrypoint.restapi.EntryPointRestApi
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.`export`.CompleterConfig
 import io.janstenpickle.trace4cats.inject.EntryPoint
@@ -35,7 +35,7 @@ object EntryPointApp extends IOApp {
       ep <- entryPoint[IO](blocker, TraceProcess("entry-point-service"))
     } yield ep)
       .use { implicit ep =>
-        EntryPointRouts[IO, Kleisli[IO, Span[IO], *]]
+        EntryPointRestApi[IO, Kleisli[IO, Span[IO], *]]
       }
       .as(ExitCode.Success)
 
