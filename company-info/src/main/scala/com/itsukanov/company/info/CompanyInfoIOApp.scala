@@ -10,11 +10,11 @@ import io.janstenpickle.trace4cats.model.TraceProcess
 
 object CompanyInfoIOApp extends RestApiIOApp {
 
-  override def traceProcess = TraceProcess("company-info-service")
+  override def traceProcess = TraceProcess("company-info-app")
 
   override def serverStart(implicit ep: EntryPoint[IO]) = RestApiServer.start(
     endpoints = CompanyInfoEndpoint.all,
-    title = "Company info service",
+    title = "Company info app",
     routes = new CompanyInfoRoutes[IO, Kleisli[IO, Span[IO], *]],
     config = ServerConfig("localhost", 8081) // todo move it to the config
   )
