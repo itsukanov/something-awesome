@@ -17,6 +17,7 @@ val commonRestApi = (project in file("common-rest-api"))
   .settings(
     name := "common-rest-api",
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
+    addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full)),
     libraryDependencies ++= Dependencies.commonInfo
   )
 

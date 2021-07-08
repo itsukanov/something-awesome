@@ -8,14 +8,18 @@ import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
 import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}
 import org.http4s.HttpRoutes
+import org.http4s.client.Client
 import sttp.tapir.server.http4s.Http4sServerOptions
 
 class EntryPointRoutes[
-  F[_] : Concurrent : ContextShift : Timer : EntryPoint,
+  F[_] : Concurrent : ContextShift : Timer,
   G[_] : BracketThrow : Trace
 ]
+(ep: EntryPoint[F], client: Client[G])
 (implicit serverOptions: Http4sServerOptions[F, F], P: Provide[F, G, Span[F]], authToken: BearerToken)
   extends BaseRoutes[F, G] with Endpoint2Rout {
+
+  implicit val iep: EntryPoint[F] = ep
 
   private val getAll: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getAll) {
     case Paging(from, limit) =>

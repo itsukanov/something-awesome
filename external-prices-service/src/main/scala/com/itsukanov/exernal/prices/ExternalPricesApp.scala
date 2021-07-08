@@ -7,16 +7,22 @@ import com.itsukanov.exernal.prices.restapi.{ExternalPricesEndpoint, ExternalPri
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.inject.EntryPoint
 import io.janstenpickle.trace4cats.model.TraceProcess
+import org.http4s.client.Client
 
 object ExternalPricesApp extends RestApiIOApp {
 
   override def traceProcess = TraceProcess("external-prices-app")
 
-  override def serverStart(implicit ep: EntryPoint[IO]) = RestApiServer.start(
-    endpoints = ExternalPricesEndpoint.all,
-    title = "External prices app",
-    routes = new ExternalPricesRoutes[IO, Kleisli[IO, Span[IO], *]],
-    config = ServerConfig("localhost", 8083) // todo move it to the config
-  )
+  def serverStart(ep: EntryPoint[IO],
+                  client: Client[Kleisli[IO, Span[IO], *]]): IO[Unit] = {
+    implicit val iep: EntryPoint[IO] = ep
+
+    RestApiServer.start(
+      endpoints = ExternalPricesEndpoint.all,
+      title = "External prices app",
+      routes = new ExternalPricesRoutes[IO, Kleisli[IO, Span[IO], *]],
+      config = ServerConfig("localhost", 8083) // todo move it to the config
+    )
+  }
 
 }

@@ -26,7 +26,7 @@ abstract class BaseRoutes[F[_], G[_]] {
 object RestApiServer {
 
   def start[
-    F[_] : ConcurrentEffect : ContextShift : Timer : EntryPoint,
+    F[_] : ConcurrentEffect : ContextShift : Timer,
     G[_] : BracketThrow : Trace
   ](endpoints: Seq[Endpoint[_, _, _, _]],
     title: String,

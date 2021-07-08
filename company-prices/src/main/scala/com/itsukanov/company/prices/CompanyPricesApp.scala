@@ -7,16 +7,20 @@ import com.itsukanov.company.prices.restapi.{CompanyPricesEndpoint, CompanyPrice
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.inject.EntryPoint
 import io.janstenpickle.trace4cats.model.TraceProcess
+import org.http4s.client.Client
 
 object CompanyPricesApp extends RestApiIOApp {
 
   override def traceProcess = TraceProcess("company-prices-app")
 
-  override def serverStart(implicit ep: EntryPoint[IO]) = RestApiServer.start(
-    endpoints = CompanyPricesEndpoint.all,
-    title = "Company prices app",
-    routes = new CompanyPricesRoutes[IO, Kleisli[IO, Span[IO], *]],
-    config = ServerConfig("localhost", 8082) // todo move it to the config
-  )
+  def serverStart(ep: EntryPoint[IO],
+                  client: Client[Kleisli[IO, Span[IO], *]]): IO[Unit] = {
+    RestApiServer.start(
+      endpoints = CompanyPricesEndpoint.all,
+      title = "Company prices app",
+      routes = new CompanyPricesRoutes(ep, client),
+      config = ServerConfig("localhost", 8082) // todo move it to the config
+    )
+  }
 
 }
