@@ -18,7 +18,7 @@ class CompanyPricesRoutes[
 
   private val getByTicker: HttpRoutes[F] = toRoutes1(CompanyPricesEndpoint.getByTicker) {
     ticker =>
-      implicitly[Monad[G]]
+      implicitly[Monad[G]] // todo it should retry
         .pure(CompanyPrices(Seq(1, 2, 3)))
         .toEither
   }
