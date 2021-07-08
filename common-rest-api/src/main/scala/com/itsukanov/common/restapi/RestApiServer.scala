@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 case class ServerConfig(host: String, port: Int)
 
 /*
-  We need BaseRouts to catch F and G, and declare [IO, Kleisli[IO, Span[IO], *]] only once during RestApiServer.apply
+  We need BaseRouts to catch F and G, and declare [IO, Kleisli[IO, Span[IO], *]] only once during RestApiServer.start
  */
 abstract class BaseRoutes[F[_], G[_]] {
   def routes: HttpRoutes[F]
@@ -25,7 +25,7 @@ abstract class BaseRoutes[F[_], G[_]] {
 
 object RestApiServer {
 
-  def apply[
+  def start[
     F[_] : ConcurrentEffect : ContextShift : Timer : EntryPoint,
     G[_] : BracketThrow : Trace
   ](endpoints: Seq[Endpoint[_, _, _, _]],
