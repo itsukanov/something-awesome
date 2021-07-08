@@ -3,7 +3,7 @@ package com.itsukanov.common.restapi
 import cats.effect.{BracketThrow, ConcurrentEffect, ContextShift, Timer}
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
-import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}
+import io.janstenpickle.trace4cats.inject.Trace
 import org.http4s.HttpRoutes
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -13,8 +13,6 @@ import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
 import sttp.tapir.openapi.circe.yaml.RichOpenAPI
 
 import scala.concurrent.ExecutionContext.Implicits.global
-
-case class ServerConfig(host: String, port: Int)
 
 /*
   We need BaseRouts to catch F and G, and declare [IO, Kleisli[IO, Span[IO], *]] only once during RestApiServer.start

@@ -2,7 +2,7 @@ package com.itsukanov.entrypoint
 
 import cats.data.Kleisli
 import cats.effect.IO
-import com.itsukanov.common.restapi.{RestApiIOApp, RestApiServer, ServerConfig}
+import com.itsukanov.common.restapi.{Config, RestApiIOApp, RestApiServer}
 import com.itsukanov.entrypoint.restapi.{EntryPointEndpoint, EntryPointRoutes}
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.inject.EntryPoint
@@ -19,7 +19,7 @@ object EntryPointApp extends RestApiIOApp {
       endpoints = EntryPointEndpoint.all,
       title = "Entry point app",
       routes = new EntryPointRoutes(ep, client),
-      config = ServerConfig("localhost", 8080) // todo move it to the config
+      config = Config.entryPoint
     )
   }
 

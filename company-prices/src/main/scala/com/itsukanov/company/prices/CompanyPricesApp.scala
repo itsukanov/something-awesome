@@ -2,7 +2,7 @@ package com.itsukanov.company.prices
 
 import cats.data.Kleisli
 import cats.effect.IO
-import com.itsukanov.common.restapi.{RestApiIOApp, RestApiServer, ServerConfig}
+import com.itsukanov.common.restapi.{Config, RestApiIOApp, RestApiServer}
 import com.itsukanov.company.prices.restapi.{CompanyPricesEndpoint, CompanyPricesRoutes}
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.inject.EntryPoint
@@ -19,7 +19,7 @@ object CompanyPricesApp extends RestApiIOApp {
       endpoints = CompanyPricesEndpoint.all,
       title = "Company prices app",
       routes = new CompanyPricesRoutes(ep, client),
-      config = ServerConfig("localhost", 8082) // todo move it to the config
+      config = Config.companyPrices
     )
   }
 
