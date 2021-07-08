@@ -9,4 +9,6 @@ object Config {
   val companyInfo = ServerConfig(localHost, 8081)
   val companyPrices = ServerConfig(localHost, 8082)
   val externalCompanyPrices = ServerConfig(localHost, 8082)
+
+  val jaeger = ServerConfig(localHost, 6831)
 }

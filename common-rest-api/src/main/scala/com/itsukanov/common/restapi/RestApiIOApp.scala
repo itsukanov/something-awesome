@@ -26,7 +26,7 @@ trait RestApiIOApp extends IOApp {
   def entryPoint[F[_] : Concurrent : ContextShift : Timer : Logger](blocker: Blocker,
                                                                     process: TraceProcess): Resource[F, EntryPoint[F]] = {
     JaegerSpanCompleter[F](blocker, process,
-      "localhost", 6831, // todo move it to the config
+      Config.jaeger.host, Config.jaeger.port,
       config = CompleterConfig(batchTimeout = 50.millis)).map { completer =>
       EntryPoint[F](SpanSampler.always[F], completer)
     }
