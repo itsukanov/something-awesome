@@ -15,10 +15,12 @@ object CompanyPricesApp extends RestApiIOApp {
 
   def serverStart(ep: EntryPoint[IO],
                   client: Client[Kleisli[IO, Span[IO], *]]): IO[Unit] = {
+    implicit val iep: EntryPoint[IO] = ep
+
     RestApiServer.start(
       endpoints = CompanyPricesEndpoint.all,
       title = "Company prices app",
-      routes = new CompanyPricesRoutes(ep, client),
+      routes = new CompanyPricesRoutes[IO, Kleisli[IO, Span[IO], *]],
       config = Config.companyPrices
     )
   }
