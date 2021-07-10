@@ -2,7 +2,7 @@ package com.itsukanov.entrypoint.restapi
 
 import com.itsukanov.common.restapi._
 import io.circe.generic.auto._
-import sttp.model.{Headers, StatusCode}
+import sttp.model.Headers
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.{Endpoint, _}
@@ -26,12 +26,6 @@ object EntryPointEndpoint extends BaseEndpoint with PagingParams {
       .in(basePath / "company" / path[String]("ticker"))
       .out(jsonBody[CompanyFullInfo])
 
-  val clearCache: Endpoint[(Headers, BearerToken), ApiError, Unit, Any] =
-    baseEndpoint
-      .post
-      .in(basePath / "clear-cache")
-      .out(statusCode(StatusCode.NoContent))
-
-  val all = List(getAll, getSingle, clearCache)
+  val all = List(getAll, getSingle)
 
 }

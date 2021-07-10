@@ -35,12 +35,6 @@ class EntryPointRoutes[
         .toEither
   }
 
-  private val clearCache: HttpRoutes[F] = toRoutes0(EntryPointEndpoint.clearCache) {
-    implicitly[Monad[G]]
-      .pure(())
-      .toEither
-  }
-
-  val routes = getAll <+> getSingle <+> clearCache
+  val routes = getAll <+> getSingle
 
 }
