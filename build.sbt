@@ -41,13 +41,6 @@ val companyPrices = (project in file("company-prices"))
     addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
   ).dependsOn(commonRestApi, commonDB)
 
-val externalPricesService = (project in file("external-prices-service"))
-  .settings(
-    name := "external-prices-service",
-    libraryDependencies ++= Dependencies.commonInfo,
-    addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
-  ).dependsOn(commonRestApi)
-
 val entryPoint = (project in file("entry-point"))
   .settings(
     name := "entry-point",
