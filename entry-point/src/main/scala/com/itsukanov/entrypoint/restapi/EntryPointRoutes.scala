@@ -1,19 +1,22 @@
 package com.itsukanov.entrypoint.restapi
 
 import cats.Monad
-import cats.effect.{BracketThrow, Concurrent, ContextShift, Timer}
-import cats.syntax.semigroupk._
+import cats.effect.{BracketThrow, Concurrent, ContextShift, Sync, Timer}
+import cats.implicits._
 import com.itsukanov.common.restapi.{BaseRoutes, BearerToken, Endpoint2Rout, Paging}
+import io.circe.generic.auto._
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
 import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}
-import org.http4s.HttpRoutes
+import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.client.Client
+import org.http4s.implicits._
+import org.http4s.{HttpRoutes, Request, _}
 import sttp.tapir.server.http4s.Http4sServerOptions
 
 class EntryPointRoutes[
   F[_] : Concurrent : ContextShift : Timer,
-  G[_] : BracketThrow : Trace
+  G[_] : BracketThrow : Trace : Sync
 ]
 (ep: EntryPoint[F], client: Client[G])
 (implicit serverOptions: Http4sServerOptions[F, F], P: Provide[F, G, Span[F]], authToken: BearerToken)
@@ -23,8 +26,14 @@ class EntryPointRoutes[
 
   private val getAll: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getAll) {
     case Paging(from, limit) =>
-      implicitly[Monad[G]]
-        .pure(List(CompanyShortInfo("Microsoft", "MSFT"), CompanyShortInfo("Amazon", "AMZN")))
+      val getAllRequest = Request[G](
+        method = Method.GET,
+        uri = uri"http://localhost:8081/api/v1.0/company",
+        headers = Headers.of(
+          Header("Authorization", s"Bearer ${authToken.token}")
+        ))
+
+      client.expect[List[CompanyShortInfo]](getAllRequest)
         .toEither
   }
 
