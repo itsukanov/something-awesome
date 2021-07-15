@@ -28,7 +28,9 @@ class EntryPointRoutes[
     case Paging(from, limit) =>
       val getAllRequest = Request[G](
         method = Method.GET,
-        uri = uri"http://localhost:8081/api/v1.0/company",
+        uri = uri"http://localhost:8081/api/v1.0/company"
+          .withQueryParam("from", from)
+          .withQueryParam("limit", limit),
         headers = Headers.of(
           Header("Authorization", s"Bearer ${authToken.token}")
         ))
