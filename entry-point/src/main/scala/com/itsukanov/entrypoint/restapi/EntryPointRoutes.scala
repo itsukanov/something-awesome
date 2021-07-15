@@ -24,6 +24,10 @@ class EntryPointRoutes[
 
   implicit val iep: EntryPoint[F] = ep
 
+  private val authHeaders = Headers.of(
+    Header("Authorization", s"Bearer ${authToken.token}")
+  )
+
   private val getAll: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getAll) {
     case Paging(from, limit) =>
       val getAllRequest = Request[G](
@@ -31,9 +35,8 @@ class EntryPointRoutes[
         uri = uri"http://localhost:8081/api/v1.0/company"
           .withQueryParam("from", from)
           .withQueryParam("limit", limit),
-        headers = Headers.of(
-          Header("Authorization", s"Bearer ${authToken.token}")
-        ))
+        headers = authHeaders
+      )
 
       client.expect[List[CompanyShortInfo]](getAllRequest)
         .toEither
@@ -41,8 +44,23 @@ class EntryPointRoutes[
 
   private val getSingle: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getSingle) {
     ticker =>
-      implicitly[Monad[G]]
-        .pure(CompanyFullInfo("Microsoft", "MSFT", Seq(1.1, 2.2)))
+      val pricesG = client.expect[CompanyPrices](Request[G](
+        method = Method.GET,
+        uri = uri"http://localhost:8082/api/v1.0/prices"
+          .withQueryParam("ticker", ticker),
+        headers = authHeaders
+      ))
+
+      val commonInfoG = client.expect[CompanyShortInfo](Request[G](
+        method = Method.GET,
+        uri = uri"http://localhost:8081/api/v1.0/company" / ticker,
+        headers = authHeaders
+      ))
+
+      (for {
+        prices <- pricesG.map(_.prices)
+        commonInfo <- commonInfoG
+      } yield CompanyFullInfo(commonInfo.name, commonInfo.ticker, prices)) // todo handle 404
         .toEither
   }
 

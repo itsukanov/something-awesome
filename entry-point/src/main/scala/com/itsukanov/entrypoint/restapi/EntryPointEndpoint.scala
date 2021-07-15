@@ -11,6 +11,8 @@ case class CompanyShortInfo(name: String, ticker: String)
 
 case class CompanyFullInfo(name: String, ticker: String, prices: Seq[Double])
 
+case class CompanyPrices(prices: Seq[Double])
+
 object EntryPointEndpoint extends BaseEndpoint with PagingParams {
 
   val getAll: Endpoint[(Headers, BearerToken, Paging), ApiError, List[CompanyShortInfo], Any] =
