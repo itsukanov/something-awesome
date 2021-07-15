@@ -16,8 +16,6 @@ class CompanyPricesRoutes[
 (implicit serverOptions: Http4sServerOptions[F, F], P: Provide[F, G, Span[F]], authToken: BearerToken)
   extends BaseRoutes[F, G] with Endpoint2Rout {
 
-
-
   private val getByTicker: HttpRoutes[F] = toRoutes1(CompanyPricesEndpoint.getByTicker) {
     ticker =>
       implicitly[Monad[G]] // todo it should retry

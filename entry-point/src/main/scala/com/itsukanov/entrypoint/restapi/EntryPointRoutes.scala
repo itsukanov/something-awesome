@@ -1,6 +1,6 @@
 package com.itsukanov.entrypoint.restapi
 
-import cats.Monad
+import cats.NonEmptyParallel
 import cats.effect.{BracketThrow, Concurrent, ContextShift, Sync, Timer}
 import cats.implicits._
 import com.itsukanov.common.restapi.{BaseRoutes, BearerToken, Endpoint2Rout, Paging}
@@ -16,7 +16,7 @@ import sttp.tapir.server.http4s.Http4sServerOptions
 
 class EntryPointRoutes[
   F[_] : Concurrent : ContextShift : Timer,
-  G[_] : BracketThrow : Trace : Sync
+  G[_] : BracketThrow : Trace : Sync : NonEmptyParallel
 ]
 (ep: EntryPoint[F], client: Client[G])
 (implicit serverOptions: Http4sServerOptions[F, F], P: Provide[F, G, Span[F]], authToken: BearerToken)
@@ -46,8 +46,7 @@ class EntryPointRoutes[
     ticker =>
       val pricesG = client.expect[CompanyPrices](Request[G](
         method = Method.GET,
-        uri = uri"http://localhost:8082/api/v1.0/prices"
-          .withQueryParam("ticker", ticker),
+        uri = uri"http://localhost:8082/api/v1.0/prices" / ticker,
         headers = authHeaders
       ))
 
@@ -57,11 +56,9 @@ class EntryPointRoutes[
         headers = authHeaders
       ))
 
-      (for {
-        prices <- pricesG.map(_.prices)
-        commonInfo <- commonInfoG
-      } yield CompanyFullInfo(commonInfo.name, commonInfo.ticker, prices)) // todo handle 404
-        .toEither
+      (pricesG, commonInfoG).parMapN {
+        case (CompanyPrices(prices), CompanyShortInfo(name, ticker)) => CompanyFullInfo(name, ticker, prices)
+      }.toEither  // todo handle 404
   }
 
   val routes = getAll <+> getSingle

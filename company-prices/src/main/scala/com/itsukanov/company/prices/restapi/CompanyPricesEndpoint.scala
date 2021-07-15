@@ -14,8 +14,7 @@ object CompanyPricesEndpoint extends BaseEndpoint with PagingParams {
   val getByTicker: Endpoint[(Headers, BearerToken, String), ApiError, CompanyPrices, Any] =
     baseEndpoint
       .get
-      .in(basePath / "prices")
-      .in(query[String]("ticker").description("Company ticker").example("MSFT"))
+      .in(basePath / "prices" / path[String]("ticker"))
       .out(jsonBody[CompanyPrices])
 
   val all = List(getByTicker)
