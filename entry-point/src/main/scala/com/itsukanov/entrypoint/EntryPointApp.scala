@@ -1,26 +1,35 @@
 package com.itsukanov.entrypoint
 
-import cats.data.Kleisli
-import cats.effect.IO
-import com.itsukanov.common.restapi.{Config, RestApiIOApp, RestApiServer}
+import cats.effect.{Blocker, ExitCode, IO, Resource}
+import com.itsukanov.common.restapi.{BaseIOApp, Config, RestApiServer}
 import com.itsukanov.entrypoint.restapi.{EntryPointEndpoint, EntryPointRoutes}
-import io.janstenpickle.trace4cats.Span
-import io.janstenpickle.trace4cats.inject.EntryPoint
+import io.janstenpickle.trace4cats.http4s.client.syntax.TracedClient
 import io.janstenpickle.trace4cats.model.TraceProcess
-import org.http4s.client.Client
+import org.http4s.client.blaze.BlazeClientBuilder
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
-object EntryPointApp extends RestApiIOApp {
+import scala.concurrent.ExecutionContext
 
-  override def traceProcess = TraceProcess("entry-point-app")
+object EntryPointApp extends BaseIOApp {
 
-  def serverStart(ep: EntryPoint[IO],
-                  client: Client[Kleisli[IO, Span[IO], *]]): IO[Unit] = {
-    RestApiServer.start(
-      endpoints = EntryPointEndpoint.all,
-      title = "Entry point app",
-      routes = new EntryPointRoutes(ep, client),
-      config = Config.entryPoint
-    )
-  }
+  override def run(args: List[String]): IO[ExitCode] =
+    (for {
+      blocker <- Blocker[IO]
+      implicit0(logger: Logger[IO]) <- Resource.eval(Slf4jLogger.create[IO])
+      ep <- entryPoint[IO](blocker, TraceProcess("entry-point-app"))
+      client <- BlazeClientBuilder[IO](ExecutionContext.global).resource
+      tracedClient = client.liftTrace()
+    } yield (ep, tracedClient))
+      .use {
+        case (ep, tracedClient) =>
+          RestApiServer.start(
+            endpoints = EntryPointEndpoint.all,
+            title = "Entry point app",
+            routes = new EntryPointRoutes(ep, tracedClient),
+            config = Config.entryPoint
+          )
+      }
+      .as(ExitCode.Success)
 
 }
