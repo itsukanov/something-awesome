@@ -6,7 +6,7 @@ object Dependencies {
   val swaggerUiVersion = "3.47.1"
   val testcontainersVersion = "1.12.0"
   val trace4catsVersion = "0.10.1"
-  val quillVersion = "3.7.1"
+  val doobieVersion = "0.12.1"
 
   val commonDeps = Seq(
     "org.apache.logging.log4j" % "log4j-core" % "2.14.1",
@@ -35,7 +35,9 @@ object Dependencies {
   val dbDeps = Seq(
     "org.testcontainers" % "postgresql" % testcontainersVersion,
     "org.testcontainers" % "testcontainers" % testcontainersVersion,
-    "io.getquill" %% "quill-jasync-postgres" % quillVersion
+    "org.tpolecat" %% "doobie-core" % doobieVersion,
+    "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+    "org.tpolecat" %% "doobie-specs2" % doobieVersion
   )
 
 }

@@ -1,13 +1,12 @@
 package com.itsukanov.company.info.restapi
 
 import com.itsukanov.common.restapi._
+import com.itsukanov.company.info.db.CompanyShortInfo
 import io.circe.generic.auto._
 import sttp.model.Headers
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe.jsonBody
 import sttp.tapir.{Endpoint, _}
-
-case class CompanyShortInfo(name: String, ticker: String) // todo remove code duplication
 
 object CompanyInfoEndpoint extends BaseEndpoint with PagingParams {
 
