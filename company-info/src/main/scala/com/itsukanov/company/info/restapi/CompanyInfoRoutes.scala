@@ -1,9 +1,10 @@
 package com.itsukanov.company.info.restapi
 
-import cats.Monad
 import cats.effect.{BracketThrow, Concurrent, ContextShift, Timer}
+import cats.implicits.catsSyntaxEitherId
+import cats.syntax.functor._
 import cats.syntax.semigroupk._
-import com.itsukanov.common.restapi.{BaseRoutes, BearerToken, Endpoint2Rout, Paging}
+import com.itsukanov.common.restapi._
 import com.itsukanov.company.info.db.{CompanyShortInfo, CompanyShortInfoRepo}
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
@@ -15,21 +16,24 @@ class CompanyInfoRoutes[
   F[_] : Concurrent : ContextShift : Timer : EntryPoint,
   G[_] : BracketThrow : Trace
 ]
-(companiesRepo: CompanyShortInfoRepo[G])
+(companyRepo: CompanyShortInfoRepo[G])
 (implicit serverOptions: Http4sServerOptions[F, F], P: Provide[F, G, Span[F]], authToken: BearerToken)
   extends BaseRoutes[F, G] with Endpoint2Rout {
 
+  private val notFound = ApiError.CompanyNotFound.asLeft[CompanyShortInfo]
+
   private val getAll: HttpRoutes[F] = toRoutes1(CompanyInfoEndpoint.getAll) {
     case Paging(from, limit) =>
-      companiesRepo.getCompanies(from, limit)
+      companyRepo.getCompanies(from, limit)
         .toEither
   }
 
   private val getSingle: HttpRoutes[F] = toRoutes1(CompanyInfoEndpoint.getSingle) {
     ticker =>
-      implicitly[Monad[G]]
-        .pure(CompanyShortInfo("Microsoft", "MSFT"))
-        .toEither
+      companyRepo.getCompany(ticker).map {
+        case Some(info) => info.asRight[ApiError]
+        case None => notFound
+      }
   }
 
   val routes = getAll <+> getSingle
