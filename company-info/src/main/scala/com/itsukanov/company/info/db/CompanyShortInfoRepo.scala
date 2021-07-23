@@ -1,13 +1,13 @@
 package com.itsukanov.company.info.db
 
 import cats.effect.{Bracket, Timer}
-import com.itsukanov.common.problems.DefaultSimulator
+import com.itsukanov.common.problems.DefaultProblemsSimulator
 import doobie.implicits._
 import doobie.util.transactor.Transactor
 import io.janstenpickle.trace4cats.inject.Trace
 
 class CompanyShortInfoRepo[F[_] : Trace : Timer](xa: Transactor[F])(implicit bracket: Bracket[F, Throwable])
-  extends DefaultSimulator {
+  extends DefaultProblemsSimulator {
 
   def getCompanies(from: Int, limit: Int): F[List[CompanyShortInfo]] = simulateProblems { // todo use from and limit
     Trace[F].span("db layer: getCompanies") {

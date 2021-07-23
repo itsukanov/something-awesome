@@ -5,7 +5,7 @@ import cats.effect.Timer
 
 import scala.concurrent.duration._
 
-trait DefaultSimulator extends ProblemsSimulator {
+trait DefaultProblemsSimulator extends ProblemsSimulator {
 
   private val combinedSimulator = new CombinedSimulator(Seq(
     (50, HappyPath),
