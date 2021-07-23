@@ -2,7 +2,8 @@ package com.itsukanov.company.info
 
 import cats.data.Kleisli
 import cats.effect.{Blocker, ExitCode, IO, Resource}
-import com.itsukanov.common.restapi.{BaseIOApp, Config, RestApiServer}
+import com.itsukanov.common.BaseIOApp
+import com.itsukanov.common.restapi.{Config, RestApiServer}
 import com.itsukanov.company.info.db.{CompanyShortInfoDDL, CompanyShortInfoRepo, Postgres}
 import com.itsukanov.company.info.restapi.{CompanyInfoEndpoint, CompanyInfoRoutes}
 import io.janstenpickle.trace4cats.inject.EntryPoint

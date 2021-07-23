@@ -1,6 +1,7 @@
-package com.itsukanov.common.restapi
+package com.itsukanov.common
 
 import cats.effect.{ContextShift, IO, Timer, _}
+import com.itsukanov.common.restapi.{BearerToken, Config}
 import io.janstenpickle.trace4cats.`export`.CompleterConfig
 import io.janstenpickle.trace4cats.inject.EntryPoint
 import io.janstenpickle.trace4cats.jaeger.JaegerSpanCompleter

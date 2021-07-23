@@ -2,7 +2,8 @@ package com.itsukanov.company.prices
 
 import cats.data.Kleisli
 import cats.effect.{Blocker, ExitCode, IO, Resource}
-import com.itsukanov.common.restapi.{BaseIOApp, Config, RestApiServer}
+import com.itsukanov.common.BaseIOApp
+import com.itsukanov.common.restapi.{Config, RestApiServer}
 import com.itsukanov.company.prices.restapi.{CompanyPricesEndpoint, CompanyPricesRoutes}
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.model.TraceProcess

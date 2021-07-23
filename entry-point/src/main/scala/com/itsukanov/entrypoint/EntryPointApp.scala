@@ -1,7 +1,8 @@
 package com.itsukanov.entrypoint
 
 import cats.effect.{Blocker, ExitCode, IO, Resource}
-import com.itsukanov.common.restapi.{BaseIOApp, Config, RestApiServer}
+import com.itsukanov.common.BaseIOApp
+import com.itsukanov.common.restapi.{Config, RestApiServer}
 import com.itsukanov.entrypoint.restapi.{EntryPointEndpoint, EntryPointRoutes}
 import io.janstenpickle.trace4cats.http4s.client.syntax.TracedClient
 import io.janstenpickle.trace4cats.model.TraceProcess
