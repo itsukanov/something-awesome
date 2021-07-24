@@ -23,7 +23,6 @@ object CompanyInfoEndpoint extends BaseEndpoint with PagingParams {
       .in(basePath / "company" / path[String]("ticker"))
       .out(jsonBody[CompanyShortInfo])
 
-
   val all = List(getAll, getSingle)
 
 }

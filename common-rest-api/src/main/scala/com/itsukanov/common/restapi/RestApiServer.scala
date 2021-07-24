@@ -24,14 +24,16 @@ abstract class BaseRoutes[F[_], G[_]] {
 object RestApiServer {
 
   def start[
-    F[_] : ConcurrentEffect : ContextShift : Timer,
-    G[_] : BracketThrow : Trace
-  ](endpoints: Seq[Endpoint[_, _, _, _]],
-    title: String,
-    routes: BaseRoutes[F, G],
-    config: ServerConfig
-   )(implicit P: Provide[F, G, Span[F]], bearerToken: BearerToken): F[Unit] = {
-    val docs = OpenAPIDocsInterpreter.toOpenAPI(endpoints, title, "1.0")
+       F[_]: ConcurrentEffect: ContextShift: Timer,
+       G[_]: BracketThrow: Trace
+  ](
+       endpoints: Seq[Endpoint[_, _, _, _]],
+       title: String,
+       routes: BaseRoutes[F, G],
+       config: ServerConfig)(
+       implicit P: Provide[F, G, Span[F]],
+       bearerToken: BearerToken): F[Unit] = {
+    val docs      = OpenAPIDocsInterpreter.toOpenAPI(endpoints, title, "1.0")
     val docsRouts = new SwaggerHttp4s(docs.toYaml).routes[F]
 
     val httpApp = Router(
@@ -46,4 +48,5 @@ object RestApiServer {
       .compile
       .drain
   }
+
 }

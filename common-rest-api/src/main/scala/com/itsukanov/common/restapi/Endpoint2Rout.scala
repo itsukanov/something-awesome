@@ -21,73 +21,76 @@ trait Endpoint2Rout {
   }
 
   def toRoutes0[
-    O,
-    F[_] : Concurrent : ContextShift : Timer,
-    G[_] : BracketThrow : Trace
+       O,
+       F[_]: Concurrent: ContextShift: Timer,
+       G[_]: BracketThrow: Trace
   ](
-     endpoint: Endpoint[(Headers, BearerToken), ApiError, O, Fs2Streams[F] with WebSockets]
-   )(f: => G[Either[ApiError, O]])
-   (implicit authToken: BearerToken,
-    serverOptions: Http4sServerOptions[F, F],
-    entryPoint: EntryPoint[F],
-    P: Provide[F, G, Span[F]]
-   ): HttpRoutes[F] = {
-    val serverEndpoint = endpoint.serverLogic {
-      case (_, bearerToken) =>
+       endpoint: Endpoint[(Headers, BearerToken), ApiError, O, Fs2Streams[F] with WebSockets]
+  )(f: => G[Either[ApiError, O]])(
+       implicit authToken: BearerToken,
+       serverOptions: Http4sServerOptions[F, F],
+       entryPoint: EntryPoint[F],
+       P: Provide[F, G, Span[F]]): HttpRoutes[F] = {
+    val serverEndpoint = endpoint
+      .serverLogic { case (_, bearerToken) =>
         if (bearerToken == authToken) f
         else ApiError.InvalidBearerToken.asLeft[O].pure[G]
-    }.inject(
-      entryPoint,
-      _._1
-    )
+      }
+      .inject(
+        entryPoint,
+        _._1
+      )
 
     Http4sServerInterpreter.toRoutes(serverEndpoint)
   }
 
   def toRoutes1[
-    I, O,
-    F[_] : Concurrent : ContextShift : Timer,
-    G[_] : BracketThrow : Trace
+       I,
+       O,
+       F[_]: Concurrent: ContextShift: Timer,
+       G[_]: BracketThrow: Trace
   ](
-     endpoint: Endpoint[(Headers, BearerToken, I), ApiError, O, Fs2Streams[F] with WebSockets]
-   )(f: I => G[Either[ApiError, O]])
-   (implicit authToken: BearerToken,
-    serverOptions: Http4sServerOptions[F, F],
-    entryPoint: EntryPoint[F],
-    P: Provide[F, G, Span[F]]
-   ): HttpRoutes[F] = {
-    val serverEndpoint = endpoint.serverLogic {
-      case (_, bearerToken, i1) =>
+       endpoint: Endpoint[(Headers, BearerToken, I), ApiError, O, Fs2Streams[F] with WebSockets]
+  )(f: I => G[Either[ApiError, O]])(
+       implicit authToken: BearerToken,
+       serverOptions: Http4sServerOptions[F, F],
+       entryPoint: EntryPoint[F],
+       P: Provide[F, G, Span[F]]): HttpRoutes[F] = {
+    val serverEndpoint = endpoint
+      .serverLogic { case (_, bearerToken, i1) =>
         if (bearerToken == authToken) f(i1)
         else ApiError.InvalidBearerToken.asLeft[O].pure[G]
-    }.inject(
-      entryPoint,
-      _._1
-    )
+      }
+      .inject(
+        entryPoint,
+        _._1
+      )
 
     Http4sServerInterpreter.toRoutes(serverEndpoint)
   }
 
   def toRoutes3[ // todo can it be deleted?
-    I1, I2, I3, O, // todo how to solve a common case instead of "I1, I2, I3"?
-    F[_] : Concurrent : ContextShift : Timer,
-    G[_] : BracketThrow : Trace
-  ](
-     endpoint: Endpoint[(Headers, BearerToken, I1, I2, I3), ApiError, O, Any]
-   )(f: (I1, I2, I3)  => G[Either[ApiError, O]])
-   (implicit authToken: BearerToken,
-    serverOptions: Http4sServerOptions[F, F],
-    entryPoint: EntryPoint[F],
-    P: Provide[F, G, Span[F]]
-   ): HttpRoutes[F] = {
-    val serverEndpoint = endpoint.serverLogic {
-      case (_, bearerToken, i1, i2, i3) =>
+       I1,
+       I2,
+       I3,
+       O, // todo how to solve a common case instead of "I1, I2, I3"?
+       F[_]: Concurrent: ContextShift: Timer,
+       G[_]: BracketThrow: Trace](
+       endpoint: Endpoint[(Headers, BearerToken, I1, I2, I3), ApiError, O, Any]
+  )(f: (I1, I2, I3) => G[Either[ApiError, O]])(
+       implicit authToken: BearerToken,
+       serverOptions: Http4sServerOptions[F, F],
+       entryPoint: EntryPoint[F],
+       P: Provide[F, G, Span[F]]): HttpRoutes[F] = {
+    val serverEndpoint = endpoint
+      .serverLogic { case (_, bearerToken, i1, i2, i3) =>
         if (bearerToken == authToken) f(i1, i2, i3)
         else ApiError.InvalidBearerToken.asLeft[O].pure[G]
-    }.inject(
-      entryPoint,
-      _._1
-    )
+      }
+      .inject(
+        entryPoint,
+        _._1
+      )
 
     Http4sServerInterpreter.toRoutes(serverEndpoint)
   }

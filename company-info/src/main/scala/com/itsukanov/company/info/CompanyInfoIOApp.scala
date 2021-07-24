@@ -16,27 +16,26 @@ object CompanyInfoIOApp extends BaseIOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     (for {
-      blocker <- Blocker[IO]
+      blocker                       <- Blocker[IO]
       implicit0(logger: Logger[IO]) <- Resource.eval(Slf4jLogger.create[IO])
-      ep <- entryPoint[IO](blocker, TraceProcess("company-info-app"))
-      postgresContainer <- Postgres.start[IO]
+      ep                            <- entryPoint[IO](blocker, TraceProcess("company-info-app"))
+      postgresContainer             <- Postgres.start[IO]
     } yield (ep, postgresContainer))
-      .use {
-        case (ep, postgres) =>
-          implicit val iep: EntryPoint[IO] = ep
+      .use { case (ep, postgres) =>
+        implicit val iep: EntryPoint[IO] = ep
 
-          val xa = Postgres.getTransactor[Kleisli[IO, Span[IO], *]](postgres)
-          val companiesRepo = new CompanyShortInfoRepo(xa)
+        val xa            = Postgres.getTransactor[Kleisli[IO, Span[IO], *]](postgres)
+        val companiesRepo = new CompanyShortInfoRepo(xa)
 
-          for {
-            _ <- CompanyShortInfoDDL.initDB(xa).run(NoopSpan(SpanContext.invalid))
-            _ <- RestApiServer.start(
-              endpoints = CompanyInfoEndpoint.all,
-              title = "Company info app",
-              routes = new CompanyInfoRoutes[IO, Kleisli[IO, Span[IO], *]](companiesRepo),
-              config = Config.companyInfo
-            )
-          } yield ()
+        for {
+          _ <- CompanyShortInfoDDL.initDB(xa).run(NoopSpan(SpanContext.invalid))
+          _ <- RestApiServer.start(
+                 endpoints = CompanyInfoEndpoint.all,
+                 title = "Company info app",
+                 routes = new CompanyInfoRoutes[IO, Kleisli[IO, Span[IO], *]](companiesRepo),
+                 config = Config.companyInfo
+               )
+        } yield ()
       }
       .as(ExitCode.Success)
 

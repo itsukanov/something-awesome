@@ -6,7 +6,7 @@ import sttp.tapir._
 case class Paging(from: Int, limit: Int)
 
 trait PagingParams {
-  private val defaultFrom = 0
+  private val defaultFrom  = 0
   private val defaultLimit = 100
 
   private val pagingFrom = query[Option[Int]]("from")
@@ -20,11 +20,15 @@ trait PagingParams {
     .validateOption(min(1).and(max(100)))
 
   val pagingIn: EndpointInput[Paging] =
-    pagingFrom.and(pagingLimit).map(input => Paging(
-      from = input._1.getOrElse(defaultFrom),
-      limit = input._2.getOrElse(defaultLimit)
-    )) {
-      case Paging(from, to) => (Some(from), Some(to))
-    }
+    pagingFrom
+      .and(pagingLimit)
+      .map(input =>
+        Paging(
+          from = input._1.getOrElse(defaultFrom),
+          limit = input._2.getOrElse(defaultLimit)
+        )
+      ) { case Paging(from, to) =>
+        (Some(from), Some(to))
+      }
 
 }

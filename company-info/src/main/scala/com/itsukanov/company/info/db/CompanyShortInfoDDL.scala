@@ -6,7 +6,8 @@ import doobie.implicits._
 
 object CompanyShortInfoDDL {
 
-  def initDB[F[_]](xa: Transactor[F])(implicit bracket: Bracket[F, Throwable]): F[Unit] = (for {
+  def initDB[F[_]](xa: Transactor[F])(
+       implicit bracket: Bracket[F, Throwable]): F[Unit] = (for {
     _ <- create
     _ <- insert
   } yield ())

@@ -16,20 +16,19 @@ object EntryPointApp extends BaseIOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     (for {
-      blocker <- Blocker[IO]
+      blocker                       <- Blocker[IO]
       implicit0(logger: Logger[IO]) <- Resource.eval(Slf4jLogger.create[IO])
-      ep <- entryPoint[IO](blocker, TraceProcess("entry-point-app"))
-      client <- BlazeClientBuilder[IO](ExecutionContext.global).resource
+      ep                            <- entryPoint[IO](blocker, TraceProcess("entry-point-app"))
+      client                        <- BlazeClientBuilder[IO](ExecutionContext.global).resource
       tracedClient = client.liftTrace()
     } yield (ep, tracedClient))
-      .use {
-        case (ep, tracedClient) =>
-          RestApiServer.start(
-            endpoints = EntryPointEndpoint.all,
-            title = "Entry point app",
-            routes = new EntryPointRoutes(ep, tracedClient),
-            config = Config.entryPoint
-          )
+      .use { case (ep, tracedClient) =>
+        RestApiServer.start(
+          endpoints = EntryPointEndpoint.all,
+          title = "Entry point app",
+          routes = new EntryPointRoutes(ep, tracedClient),
+          config = Config.entryPoint
+        )
       }
       .as(ExitCode.Success)
 

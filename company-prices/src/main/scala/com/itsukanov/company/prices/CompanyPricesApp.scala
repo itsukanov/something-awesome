@@ -14,9 +14,9 @@ object CompanyPricesApp extends BaseIOApp {
 
   override def run(args: List[String]): IO[ExitCode] =
     (for {
-      blocker <- Blocker[IO]
+      blocker                       <- Blocker[IO]
       implicit0(logger: Logger[IO]) <- Resource.eval(Slf4jLogger.create[IO])
-      ep <- entryPoint[IO](blocker, TraceProcess("company-prices-app"))
+      ep                            <- entryPoint[IO](blocker, TraceProcess("company-prices-app"))
     } yield ep)
       .use(implicit ep =>
         RestApiServer.start(

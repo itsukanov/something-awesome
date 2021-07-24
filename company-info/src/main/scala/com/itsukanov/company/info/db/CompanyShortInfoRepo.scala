@@ -6,17 +6,19 @@ import doobie.implicits._
 import doobie.util.transactor.Transactor
 import io.janstenpickle.trace4cats.inject.Trace
 
-class CompanyShortInfoRepo[F[_] : Trace : Timer](xa: Transactor[F])(implicit bracket: Bracket[F, Throwable])
-  extends DefaultProblemsSimulator {
+class CompanyShortInfoRepo[F[_]: Trace: Timer](xa: Transactor[F])(
+  implicit bracket: Bracket[F, Throwable])
+    extends DefaultProblemsSimulator {
 
-  def getCompanies(from: Int, limit: Int): F[List[CompanyShortInfo]] = simulateProblems { // todo use from and limit
-    Trace[F].span("db layer: getCompanies") {
-      sql"select * from company_short_info"
-        .query[CompanyShortInfo]
-        .to[List]
-        .transact(xa)
+  def getCompanies(from: Int, limit: Int): F[List[CompanyShortInfo]] =
+    simulateProblems { // todo use from and limit
+      Trace[F].span("db layer: getCompanies") {
+        sql"select * from company_short_info"
+          .query[CompanyShortInfo]
+          .to[List]
+          .transact(xa)
+      }
     }
-  }
 
   def getCompany(ticker: String): F[Option[CompanyShortInfo]] = {
     Trace[F].span("db layer: getCompany") {
