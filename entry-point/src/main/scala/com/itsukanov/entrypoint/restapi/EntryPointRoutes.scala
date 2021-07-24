@@ -43,7 +43,7 @@ class EntryPointRoutes[
   }
 
   private val getSingle: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getSingle) {
-    ticker =>
+    ticker => // todo it should retry
       val pricesG = client.expect[CompanyPrices](Request[G](
         method = Method.GET,
         uri = uri"http://localhost:8082/api/v1.0/prices" / ticker,
