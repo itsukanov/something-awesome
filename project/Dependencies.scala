@@ -7,6 +7,7 @@ object Dependencies {
   val testcontainersVersion = "1.12.0"
   val trace4catsVersion = "0.10.1"
   val doobieVersion = "0.12.1"
+  val catsRetryVersion = "2.1.1"
 
   val commonDeps = Seq(
     "org.apache.logging.log4j" % "log4j-core" % "2.14.1",
@@ -29,7 +30,9 @@ object Dependencies {
 
     "org.http4s" %% "http4s-dsl" % http4sVersion,
     "org.http4s" %% "http4s-blaze-client" % http4sVersion,
-    "org.http4s" %% "http4s-circe" % http4sVersion
+    "org.http4s" %% "http4s-circe" % http4sVersion,
+
+    "com.github.cb372" %% "cats-retry" % catsRetryVersion
   )
 
   val dbDeps = Seq(

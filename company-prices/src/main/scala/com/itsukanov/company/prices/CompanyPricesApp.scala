@@ -21,9 +21,9 @@ object CompanyPricesApp extends BaseIOApp {
       .use(implicit ep =>
         RestApiServer.start(
           endpoints = CompanyPricesEndpoint.all,
-          title = "Company info app",
+          title = "Company prices app",
           routes = new CompanyPricesRoutes[IO, Kleisli[IO, Span[IO], *]],
-          config = Config.companyInfo
+          config = Config.companyPrices
         )
       )
       .as(ExitCode.Success)

@@ -9,9 +9,9 @@ trait DefaultProblemsSimulator extends ProblemsSimulator {
 
   private val combinedSimulator = new CombinedSimulator(
     Seq(
-      (50, HappyPath),
-      (30, new TimedOut(10.seconds)),
-      (20, FailedWithError)
+      (40, HappyPath),
+      (30, new TimedOut(5.seconds)),
+      (30, FailedWithError)
     )
   )
 

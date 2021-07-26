@@ -4,6 +4,7 @@ import cats.NonEmptyParallel
 import cats.effect.{BracketThrow, Concurrent, ContextShift, Sync, Timer}
 import cats.implicits._
 import com.itsukanov.common.restapi.{BaseRoutes, BearerToken, Endpoint2Rout, Paging}
+import com.itsukanov.entrypoint.Retries
 import io.circe.generic.auto._
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
@@ -12,16 +13,18 @@ import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.client.Client
 import org.http4s.implicits._
 import org.http4s.{HttpRoutes, Request, _}
+import retry.Sleep
 import sttp.tapir.server.http4s.Http4sServerOptions
 
 class EntryPointRoutes[
      F[_]: Concurrent: ContextShift: Timer,
-     G[_]: BracketThrow: Trace: Sync: NonEmptyParallel
+     G[_]: BracketThrow: Trace: Sync: NonEmptyParallel: Sleep
 ](ep: EntryPoint[F], client: Client[G])(
   implicit serverOptions: Http4sServerOptions[F, F],
   P: Provide[F, G, Span[F]],
   authToken: BearerToken)
     extends BaseRoutes[F, G]
+    with Retries
     with Endpoint2Rout {
 
   implicit val iep: EntryPoint[F] = ep
@@ -45,19 +48,23 @@ class EntryPointRoutes[
 
   private val getSingle: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getSingle) {
     ticker => // todo it should retry
-      val pricesG = client.expect[CompanyPrices](
-        Request[G](
-          method = Method.GET,
-          uri = uri"http://localhost:8082/api/v1.0/prices" / ticker,
-          headers = authHeaders
+      val pricesG = withRetry("getting.CompanyPrices")(
+        client.expect[CompanyPrices](
+          Request[G](
+            method = Method.GET,
+            uri = uri"http://localhost:8082/api/v1.0/prices" / ticker,
+            headers = authHeaders
+          )
         )
       )
 
-      val commonInfoG = client.expect[CompanyShortInfo](
-        Request[G](
-          method = Method.GET,
-          uri = uri"http://localhost:8081/api/v1.0/company" / ticker,
-          headers = authHeaders
+      val commonInfoG = withRetry("getting.CompanyShortInfo")(
+        client.expect[CompanyShortInfo](
+          Request[G](
+            method = Method.GET,
+            uri = uri"http://localhost:8081/api/v1.0/company" / ticker,
+            headers = authHeaders
+          )
         )
       )
 
