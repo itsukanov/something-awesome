@@ -1,6 +1,7 @@
 package com.itsukanov.company.info.db
 
 import cats.effect.{Bracket, Timer}
+import com.itsukanov.common.CompanyShortInfo
 import com.itsukanov.common.problems.DefaultProblemsSimulator
 import doobie.implicits._
 import doobie.util.transactor.Transactor
@@ -10,9 +11,9 @@ class CompanyShortInfoRepo[F[_]: Trace: Timer](xa: Transactor[F])(
   implicit bracket: Bracket[F, Throwable])
     extends DefaultProblemsSimulator {
 
-  def getCompanies(from: Int, limit: Int): F[List[CompanyShortInfo]] = // todo use from and limit
+  def getCompanies(from: Int, limit: Int): F[List[CompanyShortInfo]] =
     Trace[F].span("db layer: getCompanies") {
-      sql"select * from company_short_info"
+      sql"select * from company_short_info limit $limit offset $from"
         .query[CompanyShortInfo]
         .to[List]
         .transact(xa)

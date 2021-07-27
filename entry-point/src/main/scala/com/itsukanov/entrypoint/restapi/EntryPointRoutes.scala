@@ -3,6 +3,7 @@ package com.itsukanov.entrypoint.restapi
 import cats.NonEmptyParallel
 import cats.effect.{BracketThrow, Concurrent, ContextShift, Sync, Timer}
 import cats.implicits._
+import com.itsukanov.common.CompanyShortInfo
 import com.itsukanov.common.restapi.{BaseRoutes, BearerToken, Endpoint2Rout, Paging}
 import com.itsukanov.entrypoint.Retries
 import io.circe.generic.auto._

@@ -1,7 +1,7 @@
 package com.itsukanov.company.info.restapi
 
+import com.itsukanov.common.CompanyShortInfo
 import com.itsukanov.common.restapi._
-import com.itsukanov.company.info.db.CompanyShortInfo
 import io.circe.generic.auto._
 import sttp.model.Headers
 import sttp.tapir.generic.auto._

@@ -4,8 +4,9 @@ import cats.effect.{BracketThrow, Concurrent, ContextShift, Timer}
 import cats.implicits.catsSyntaxEitherId
 import cats.syntax.functor._
 import cats.syntax.semigroupk._
+import com.itsukanov.common.CompanyShortInfo
 import com.itsukanov.common.restapi._
-import com.itsukanov.company.info.db.{CompanyShortInfo, CompanyShortInfoRepo}
+import com.itsukanov.company.info.db.CompanyShortInfoRepo
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
 import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}

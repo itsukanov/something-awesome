@@ -1,8 +1,9 @@
 package com.itsukanov.company.info.db
 
 import cats.effect.Bracket
-import doobie.Transactor
+import com.itsukanov.common.CompanyShortInfo
 import doobie.implicits._
+import doobie.{Transactor, Update}
 
 object CompanyShortInfoDDL {
 
@@ -21,10 +22,9 @@ object CompanyShortInfoDDL {
     )
   """.update.run
 
-  private val insert =
-    sql"""
-      insert into company_short_info (name, ticker) values
-      ('Microsoft Corporation2', 'MSFT')
-       """.update.run
+  private val insert = {
+    val sql = "insert into company_short_info (name, ticker) values (?, ?)"
+    Update[CompanyShortInfo](sql).updateMany(CompanyShortInfo.allCompanies)
+  }
 
 }

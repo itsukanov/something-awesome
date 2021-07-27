@@ -21,6 +21,22 @@ trait Endpoint2Rout {
     def toEither = g.map(_.asRight[ApiError])
   }
 
+  private def logErrorWithTrace[T, O, G[_]: Trace](action: G[Either[ApiError, O]])(
+       implicit BT: BracketThrow[G],
+       L: Logger[G]): G[Either[ApiError, O]] = {
+    BT.recoverWith(action) { case thr: Throwable =>
+      for {
+        traceId <- Trace[G]
+                     .traceId
+                     .map(
+                       _.getOrElse(throw new RuntimeException("traceId is not set"))
+                     ) // todo when traceId can be missing?
+        _ <- L.error(thr)(s"TraceId = $traceId")
+        apiError = InternalError.fromTraceId(traceId).asLeft[O]
+      } yield apiError
+    }
+  }
+
   def toRoutes0[
        O,
        F[_]: Concurrent: ContextShift: Timer,
@@ -45,30 +61,14 @@ trait Endpoint2Rout {
     Http4sServerInterpreter.toRoutes(serverEndpoint)
   }
 
-  private def logErrorWithTrace[T, O, G[_]: Trace](action: G[Either[ApiError, O]])(
-       implicit BT: BracketThrow[G],
-       L: Logger[G]): G[Either[ApiError, O]] = {
-    BT.recoverWith(action) { case thr: Throwable =>
-      for {
-        traceId <- Trace[G]
-                     .traceId
-                     .map(
-                       _.getOrElse(throw new RuntimeException("traceId is not set"))
-                     ) // todo when traceId can be missing?
-        _ <- L.error(thr)(s"TraceId = $traceId")
-        apiError = InternalError.fromTraceId(traceId).asLeft[O]
-      } yield apiError
-    }
-  }
-
   def toRoutes1[
-       I,
+       I1, // todo how to solve a common case instead of "I1, I2, I3"?
        O,
        F[_]: Concurrent: ContextShift: Timer,
        G[_]: Trace: Logger
   ](
-       endpoint: Endpoint[(Headers, BearerToken, I), ApiError, O, Fs2Streams[F] with WebSockets]
-  )(f: I => G[Either[ApiError, O]])(
+       endpoint: Endpoint[(Headers, BearerToken, I1), ApiError, O, Fs2Streams[F] with WebSockets]
+  )(f: I1 => G[Either[ApiError, O]])(
        implicit authToken: BearerToken,
        serverOptions: Http4sServerOptions[F, F],
        entryPoint: EntryPoint[F],
@@ -77,32 +77,6 @@ trait Endpoint2Rout {
     val serverEndpoint = endpoint
       .serverLogic { case (_, bearerToken, i1) =>
         if (bearerToken == authToken) logErrorWithTrace(f(i1))
-        else ApiError.InvalidBearerToken.asLeft[O].pure[G]
-      }
-      .inject(
-        entryPoint,
-        _._1
-      )
-
-    Http4sServerInterpreter.toRoutes(serverEndpoint)
-  }
-
-  def toRoutes3[ // todo can it be deleted?
-       I1,
-       I2,
-       I3,
-       O, // todo how to solve a common case instead of "I1, I2, I3"?
-       F[_]: Concurrent: ContextShift: Timer,
-       G[_]: BracketThrow: Trace](
-       endpoint: Endpoint[(Headers, BearerToken, I1, I2, I3), ApiError, O, Any]
-  )(f: (I1, I2, I3) => G[Either[ApiError, O]])(
-       implicit authToken: BearerToken,
-       serverOptions: Http4sServerOptions[F, F],
-       entryPoint: EntryPoint[F],
-       P: Provide[F, G, Span[F]]): HttpRoutes[F] = {
-    val serverEndpoint = endpoint
-      .serverLogic { case (_, bearerToken, i1, i2, i3) =>
-        if (bearerToken == authToken) f(i1, i2, i3)
         else ApiError.InvalidBearerToken.asLeft[O].pure[G]
       }
       .inject(
