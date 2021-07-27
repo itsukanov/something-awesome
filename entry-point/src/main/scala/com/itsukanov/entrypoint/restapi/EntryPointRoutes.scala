@@ -13,12 +13,13 @@ import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.client.Client
 import org.http4s.implicits._
 import org.http4s.{HttpRoutes, Request, _}
+import org.typelevel.log4cats.Logger
 import retry.Sleep
 import sttp.tapir.server.http4s.Http4sServerOptions
 
 class EntryPointRoutes[
      F[_]: Concurrent: ContextShift: Timer,
-     G[_]: BracketThrow: Trace: Sync: NonEmptyParallel: Sleep
+     G[_]: BracketThrow: Trace: Sync: NonEmptyParallel: Sleep: Logger
 ](ep: EntryPoint[F], client: Client[G])(
   implicit serverOptions: Http4sServerOptions[F, F],
   P: Provide[F, G, Span[F]],
@@ -46,32 +47,30 @@ class EntryPointRoutes[
       client.expect[List[CompanyShortInfo]](getAllRequest).toEither
   }
 
-  private val getSingle: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getSingle) {
-    ticker => // todo it should retry
-      val pricesG = withRetry("getting.CompanyPrices")(
-        client.expect[CompanyPrices](
-          Request[G](
-            method = Method.GET,
-            uri = uri"http://localhost:8082/api/v1.0/prices" / ticker,
-            headers = authHeaders
-          )
+  private val getSingle: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getSingle) { ticker =>
+    val pricesG = withRetry("getting.CompanyPrices")(
+      client.expect[CompanyPrices](
+        Request[G](
+          method = Method.GET,
+          uri = uri"http://localhost:8082/api/v1.0/prices" / ticker,
+          headers = authHeaders
         )
       )
+    )
 
-      val commonInfoG = withRetry("getting.CompanyShortInfo")(
-        client.expect[CompanyShortInfo](
-          Request[G](
-            method = Method.GET,
-            uri = uri"http://localhost:8081/api/v1.0/company" / ticker,
-            headers = authHeaders
-          )
+    val commonInfoG = withRetry("getting.CompanyShortInfo")(
+      client.expect[CompanyShortInfo](
+        Request[G](
+          method = Method.GET,
+          uri = uri"http://localhost:8081/api/v1.0/company" / ticker,
+          headers = authHeaders
         )
       )
+    )
 
-      (pricesG, commonInfoG).parMapN {
-        case (CompanyPrices(prices), CompanyShortInfo(name, ticker)) =>
-          CompanyFullInfo(name, ticker, prices)
-      }.toEither // todo handle 404
+    (pricesG, commonInfoG).parMapN { case (CompanyPrices(prices), CompanyShortInfo(name, ticker)) =>
+      CompanyFullInfo(name, ticker, prices)
+    }.toEither // todo handle 404
   }
 
   val routes = getAll <+> getSingle

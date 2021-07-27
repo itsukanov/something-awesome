@@ -20,9 +20,10 @@ object CompanyInfoIOApp extends BaseIOApp {
       implicit0(logger: Logger[IO]) <- Resource.eval(Slf4jLogger.create[IO])
       ep                            <- entryPoint[IO](blocker, TraceProcess("company-info-app"))
       postgresContainer             <- Postgres.start[IO]
-    } yield (ep, postgresContainer))
-      .use { case (ep, postgres) =>
-        implicit val iep: EntryPoint[IO] = ep
+    } yield (ep, postgresContainer, logger))
+      .use { case (ep, postgres, logger) =>
+        implicit val iep: EntryPoint[IO]                       = ep
+        implicit val iLogger: Logger[Kleisli[IO, Span[IO], *]] = tracedLogger(logger)
 
         val xa            = Postgres.getTransactor[Kleisli[IO, Span[IO], *]](postgres)
         val companiesRepo = new CompanyShortInfoRepo(xa)

@@ -7,7 +7,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 
 object Postgres {
 
-  private val logger = org.log4s.getLogger
+  private val logger = org.log4s.getLogger // todo remove it? use org.typelevel.log4cats.Logger instead?
 
   def start[F[_]: ContextShift](
        implicit F: Async[F]): Resource[F, PostgreSQLContainer[_]] =

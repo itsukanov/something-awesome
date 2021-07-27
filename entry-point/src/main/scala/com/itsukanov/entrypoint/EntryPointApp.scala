@@ -1,9 +1,11 @@
 package com.itsukanov.entrypoint
 
+import cats.data.Kleisli
 import cats.effect.{Blocker, ExitCode, IO, Resource}
 import com.itsukanov.common.BaseIOApp
 import com.itsukanov.common.restapi.{Config, RestApiServer}
 import com.itsukanov.entrypoint.restapi.{EntryPointEndpoint, EntryPointRoutes}
+import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.http4s.client.syntax.TracedClient
 import io.janstenpickle.trace4cats.model.TraceProcess
 import org.http4s.client.blaze.BlazeClientBuilder
@@ -24,8 +26,10 @@ object EntryPointApp extends BaseIOApp {
                   .withRequestTimeout(2.seconds)
                   .resource
       tracedClient = client.liftTrace()
-    } yield (ep, tracedClient))
-      .use { case (ep, tracedClient) =>
+    } yield (ep, tracedClient, logger))
+      .use { case (ep, tracedClient, logger) =>
+        implicit val iLogger: Logger[Kleisli[IO, Span[IO], *]] = tracedLogger(logger)
+
         RestApiServer.start(
           endpoints = EntryPointEndpoint.all,
           title = "Entry point app",

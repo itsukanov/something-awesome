@@ -1,8 +1,11 @@
 package com.itsukanov.common
 
+import cats.data.Kleisli
 import cats.effect.{ContextShift, IO, Timer, _}
 import com.itsukanov.common.restapi.{BearerToken, Config}
+import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.`export`.CompleterConfig
+import io.janstenpickle.trace4cats.base.context.ContextRoot
 import io.janstenpickle.trace4cats.inject.EntryPoint
 import io.janstenpickle.trace4cats.jaeger.JaegerSpanCompleter
 import io.janstenpickle.trace4cats.kernel.SpanSampler
@@ -30,5 +33,11 @@ trait BaseIOApp extends IOApp {
       EntryPoint[F](SpanSampler.always[F], completer)
     }
   }
+
+  /** To use inside a traced context
+    * todo it looks a bit strange - find out is it a good practice?
+    */
+  def tracedLogger(logger: Logger[IO]): Logger[Kleisli[IO, Span[IO], *]] =
+    logger.mapK(ContextRoot.kleisliInstance[IO, Span[IO]].liftK)
 
 }

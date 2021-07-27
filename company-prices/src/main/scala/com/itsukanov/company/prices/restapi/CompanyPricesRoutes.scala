@@ -8,11 +8,12 @@ import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
 import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}
 import org.http4s.HttpRoutes
+import org.typelevel.log4cats.Logger
 import sttp.tapir.server.http4s.Http4sServerOptions
 
 class CompanyPricesRoutes[
      F[_]: Concurrent: ContextShift: Timer: EntryPoint,
-     G[_]: BracketThrow: Trace: Timer
+     G[_]: BracketThrow: Trace: Timer: Logger
 ](
   implicit serverOptions: Http4sServerOptions[F, F],
   P: Provide[F, G, Span[F]],

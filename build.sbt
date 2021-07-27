@@ -16,7 +16,8 @@ scalacOptions in GlobalScope ++= Seq(
 val commonRestApi = (project in file("common-rest-api"))
   .settings(
     name := "common-rest-api",
-    libraryDependencies ++= Dependencies.commonDeps
+    libraryDependencies ++= Dependencies.commonDeps,
+    addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
   )
 
 val companyInfo = (project in file("company-info"))

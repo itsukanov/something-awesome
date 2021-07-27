@@ -8,6 +8,7 @@ import io.janstenpickle.trace4cats.base.context.Provide
 import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}
 import io.janstenpickle.trace4cats.sttp.tapir.syntax._
 import org.http4s.HttpRoutes
+import org.typelevel.log4cats.Logger
 import sttp.capabilities.WebSockets
 import sttp.capabilities.fs2.Fs2Streams
 import sttp.model.Headers
@@ -44,21 +45,38 @@ trait Endpoint2Rout {
     Http4sServerInterpreter.toRoutes(serverEndpoint)
   }
 
+  private def logErrorWithTrace[T, O, G[_]: Trace](action: G[Either[ApiError, O]])(
+       implicit BT: BracketThrow[G],
+       L: Logger[G]): G[Either[ApiError, O]] = {
+    BT.recoverWith(action) { case thr: Throwable =>
+      for {
+        traceId <- Trace[G]
+                     .traceId
+                     .map(
+                       _.getOrElse(throw new RuntimeException("traceId is not set"))
+                     ) // todo when traceId can be missing?
+        _ <- L.error(thr)(s"TraceId = $traceId")
+        apiError = InternalError.fromTraceId(traceId).asLeft[O]
+      } yield apiError
+    }
+  }
+
   def toRoutes1[
        I,
        O,
        F[_]: Concurrent: ContextShift: Timer,
-       G[_]: BracketThrow: Trace
+       G[_]: Trace: Logger
   ](
        endpoint: Endpoint[(Headers, BearerToken, I), ApiError, O, Fs2Streams[F] with WebSockets]
   )(f: I => G[Either[ApiError, O]])(
        implicit authToken: BearerToken,
        serverOptions: Http4sServerOptions[F, F],
        entryPoint: EntryPoint[F],
+       BT: BracketThrow[G],
        P: Provide[F, G, Span[F]]): HttpRoutes[F] = {
     val serverEndpoint = endpoint
       .serverLogic { case (_, bearerToken, i1) =>
-        if (bearerToken == authToken) f(i1)
+        if (bearerToken == authToken) logErrorWithTrace(f(i1))
         else ApiError.InvalidBearerToken.asLeft[O].pure[G]
       }
       .inject(

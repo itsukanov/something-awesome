@@ -15,6 +15,7 @@ trait BaseEndpoint {
     .errorOut(
       oneOf[ApiError](
         oneOfMapping(StatusCode.NotFound, jsonBody[NotFound].description("not found")),
+        oneOfMapping(StatusCode.InternalServerError, jsonBody[InternalError].description("internal error")),
         oneOfMapping(
           StatusCode.Unauthorized,
           jsonBody[AuthorizationError].description("authorization error")
