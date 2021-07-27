@@ -1,9 +1,10 @@
 package com.itsukanov.company.prices.restapi
 
-import cats.Monad
 import cats.effect.{BracketThrow, Concurrent, ContextShift, Timer}
+import cats.implicits._
+import com.itsukanov.common.Companies
 import com.itsukanov.common.problems.DefaultProblemsSimulator
-import com.itsukanov.common.restapi.{BaseRoutes, BearerToken, Endpoint2Rout}
+import com.itsukanov.common.restapi.{ApiError, BaseRoutes, BearerToken, Endpoint2Rout}
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
 import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}
@@ -22,11 +23,14 @@ class CompanyPricesRoutes[
     with Endpoint2Rout
     with DefaultProblemsSimulator {
 
+  private val notFound = ApiError.CompanyNotFound.asLeft[CompanyPrices]
+
   private val getByTicker: HttpRoutes[F] = toRoutes1(CompanyPricesEndpoint.getByTicker) { ticker =>
     simulateProblems {
-      implicitly[Monad[G]]
-        .pure(CompanyPrices(Seq(1, 2, 3)))
-        .toEither
+      (Companies.allCompanies.find(_.ticker == ticker) match {
+        case None           => notFound
+        case Some(fullInfo) => CompanyPrices(fullInfo.prices).asRight[ApiError]
+      }).pure[G]
     }
   }
 
