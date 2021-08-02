@@ -3,8 +3,8 @@ package com.itsukanov.entrypoint.restapi
 import cats.NonEmptyParallel
 import cats.effect.{BracketThrow, Concurrent, ContextShift, Sync, Timer}
 import cats.implicits._
+import com.itsukanov.common.restapi._
 import com.itsukanov.common.{CompanyFullInfo, CompanyShortInfo}
-import com.itsukanov.common.restapi.{BaseRoutes, BearerToken, Endpoint2Rout, Paging}
 import com.itsukanov.entrypoint.Retries
 import io.circe.generic.auto._
 import io.janstenpickle.trace4cats.Span
@@ -27,9 +27,12 @@ class EntryPointRoutes[
   authToken: BearerToken)
     extends BaseRoutes[F, G]
     with Retries
+    with Http4sClientSupport
     with Endpoint2Rout {
 
   implicit val iep: EntryPoint[F] = ep
+
+  private val notFount = ApiError.CompanyNotFound.asLeft[CompanyFullInfo]
 
   private val authHeaders = Headers.of(
     Header("Authorization", s"Bearer ${authToken.token}")
@@ -57,7 +60,7 @@ class EntryPointRoutes[
           headers = authHeaders
         )
       )
-    )
+    ).handle404
 
     val commonInfoG = withRetry("getting.CompanyShortInfo")(
       client.expect[CompanyShortInfo](
@@ -67,11 +70,17 @@ class EntryPointRoutes[
           headers = authHeaders
         )
       )
-    )
+    ).handle404
 
-    (pricesG, commonInfoG).parMapN { case (CompanyPrices(prices), CompanyShortInfo(name, ticker)) =>
-      CompanyFullInfo(name, ticker, prices)
-    }.toEither // todo handle 404
+    (pricesG, commonInfoG).parMapN { case (pricesOpt, infoOpt) =>
+      (for {
+        CompanyPrices(prices)          <- pricesOpt
+        CompanyShortInfo(name, ticker) <- infoOpt
+      } yield CompanyFullInfo(name, ticker, prices)) match {
+        case Some(fullInfo) => fullInfo.asRight[ApiError]
+        case None           => notFount
+      }
+    }
   }
 
   val routes = getAll <+> getSingle
