@@ -1,13 +1,14 @@
 package com.itsukanov.common.restapi
 
-import cats.Functor
+import cats.MonadThrow
 import cats.effect.{BracketThrow, Concurrent, ContextShift, Timer}
 import cats.implicits._
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
 import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}
 import io.janstenpickle.trace4cats.sttp.tapir.syntax._
-import org.http4s.HttpRoutes
+import org.http4s.client.UnexpectedStatus
+import org.http4s.{HttpRoutes, Status}
 import org.typelevel.log4cats.Logger
 import sttp.capabilities.WebSockets
 import sttp.capabilities.fs2.Fs2Streams
@@ -17,11 +18,16 @@ import sttp.tapir.server.http4s.{Http4sServerInterpreter, Http4sServerOptions}
 
 trait Endpoint2Rout {
 
-  implicit class GOps[G[_]: Functor, T](g: G[T]) {
-    def toEither = g.map(_.asRight[ApiError])
+  implicit class GOps[G[_]: MonadThrow, T](gt: G[T]) {
+    def toEither = gt.map(_.asRight[ApiError])
+
+    def handle404: G[Option[T]] = gt.map(Option(_)).recover { case UnexpectedStatus(Status(404)) =>
+      Option.empty[T]
+    }
+
   }
 
-  private def logErrorWithTrace[T, O, G[_]: Trace](action: G[Either[ApiError, O]])(
+  def logErrorWithTrace[T, O, G[_]: Trace](action: G[Either[ApiError, O]])(
        implicit BT: BracketThrow[G],
        L: Logger[G]): G[Either[ApiError, O]] = {
     BT.recoverWith(action) { case thr: Throwable =>
@@ -31,7 +37,7 @@ trait Endpoint2Rout {
                      .map(
                        _.getOrElse(throw new RuntimeException("traceId is not set"))
                      ) // todo when traceId can be missing?
-        _ <- L.error(thr)(s"TraceId = $traceId")
+        _ <- L.error(thr)(s"TraceId = $traceId, ${thr.getMessage}")
         apiError = InternalError.fromTraceId(traceId).asLeft[O]
       } yield apiError
     }
@@ -76,7 +82,7 @@ trait Endpoint2Rout {
        P: Provide[F, G, Span[F]]): HttpRoutes[F] = {
     val serverEndpoint = endpoint
       .serverLogic { case (_, bearerToken, i1) =>
-        if (bearerToken == authToken) logErrorWithTrace(f(i1))
+        if (bearerToken == authToken) f(i1)
         else ApiError.InvalidBearerToken.asLeft[O].pure[G]
       }
       .inject(

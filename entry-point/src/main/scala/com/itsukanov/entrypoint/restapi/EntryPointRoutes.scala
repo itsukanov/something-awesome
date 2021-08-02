@@ -27,7 +27,6 @@ class EntryPointRoutes[
   authToken: BearerToken)
     extends BaseRoutes[F, G]
     with Retries
-    with Http4sClientSupport
     with Endpoint2Rout {
 
   implicit val iep: EntryPoint[F] = ep
@@ -48,7 +47,7 @@ class EntryPointRoutes[
         headers = authHeaders
       )
 
-      client.expect[List[CompanyShortInfo]](getAllRequest).toEither
+      logErrorWithTrace(client.expect[List[CompanyShortInfo]](getAllRequest).toEither)
   }
 
   private val getSingle: HttpRoutes[F] = toRoutes1(EntryPointEndpoint.getSingle) { ticker =>
@@ -72,7 +71,7 @@ class EntryPointRoutes[
       )
     ).handle404
 
-    (pricesG, commonInfoG).parMapN { case (pricesOpt, infoOpt) =>
+    logErrorWithTrace((pricesG, commonInfoG).parMapN { case (pricesOpt, infoOpt) =>
       (for {
         CompanyPrices(prices)          <- pricesOpt
         CompanyShortInfo(name, ticker) <- infoOpt
@@ -80,7 +79,7 @@ class EntryPointRoutes[
         case Some(fullInfo) => fullInfo.asRight[ApiError]
         case None           => notFount
       }
-    }
+    })
   }
 
   val routes = getAll <+> getSingle
