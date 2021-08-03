@@ -28,7 +28,7 @@ trait BaseIOApp extends IOApp {
       process,
       Config.jaeger.host,
       Config.jaeger.port,
-      config = CompleterConfig(batchTimeout = 50.millis)
+      config = CompleterConfig(batchTimeout = Config.jaegerBatchTimeout)
     ).map { completer =>
       EntryPoint[F](SpanSampler.always[F], completer)
     }

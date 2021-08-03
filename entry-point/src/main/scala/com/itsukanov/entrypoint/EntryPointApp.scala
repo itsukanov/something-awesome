@@ -13,7 +13,6 @@ import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 
 object EntryPointApp extends BaseIOApp {
 
@@ -23,7 +22,7 @@ object EntryPointApp extends BaseIOApp {
       implicit0(logger: Logger[IO]) <- Resource.eval(Slf4jLogger.create[IO])
       ep                            <- entryPoint[IO](blocker, TraceProcess("entry-point-app"))
       client <- BlazeClientBuilder[IO](ExecutionContext.global)
-                  .withRequestTimeout(2.seconds)
+                  .withRequestTimeout(Config.requestTimeout)
                   .resource
       tracedClient = client.liftTrace()
     } yield (ep, tracedClient, logger))
