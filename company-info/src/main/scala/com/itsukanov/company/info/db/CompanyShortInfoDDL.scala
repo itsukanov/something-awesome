@@ -11,8 +11,7 @@ object CompanyShortInfoDDL {
        implicit bracket: Bracket[F, Throwable]): F[Unit] = (for {
     _ <- create
     _ <- insert
-  } yield ())
-    .transact(xa)
+  } yield ()).transact(xa)
 
   private val create =
     sql"""
