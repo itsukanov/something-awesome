@@ -6,9 +6,9 @@ object Config {
   val defaultToken = BearerToken("123")
   val localHost    = "localhost"
 
-  val entryPoint            = ServerConfig(localHost, 8080)
-  val companyInfo           = ServerConfig(localHost, 8081)
-  val companyPrices         = ServerConfig(localHost, 8082)
+  val entryPoint    = ServerConfig(localHost, 8080)
+  val companyInfo   = ServerConfig(localHost, 8081)
+  val companyPrices = ServerConfig(localHost, 8082)
 
   val jaeger = ServerConfig(localHost, 6831)
 }
