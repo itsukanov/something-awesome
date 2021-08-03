@@ -4,7 +4,7 @@ import cats.data.Kleisli
 import cats.effect.{Blocker, ExitCode, IO, Resource}
 import com.itsukanov.common.BaseIOApp
 import com.itsukanov.common.restapi.{Config, RestApiServer}
-import com.itsukanov.entrypoint.restapi.{EntryPointEndpoint, EntryPointRoutes}
+import com.itsukanov.entrypoint.restapi.{EntryPointEndpoint, EntryPointRoutes, ExternalCalls}
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.http4s.client.syntax.TracedClient
 import io.janstenpickle.trace4cats.model.TraceProcess
@@ -29,10 +29,13 @@ object EntryPointApp extends BaseIOApp {
       .use { case (ep, tracedClient, logger) =>
         implicit val iLogger: Logger[Kleisli[IO, Span[IO], *]] = tracedLogger(logger)
 
+        val externalCalls =
+          new ExternalCalls(tracedClient, bearerToken, Config.companyInfo, Config.companyPrices)
+
         RestApiServer.start(
           endpoints = EntryPointEndpoint.all,
           title = "Entry point app",
-          routes = new EntryPointRoutes(ep, tracedClient),
+          routes = new EntryPointRoutes(ep, externalCalls),
           config = Config.entryPoint
         )
       }

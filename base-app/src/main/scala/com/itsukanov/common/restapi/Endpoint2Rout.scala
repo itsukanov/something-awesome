@@ -1,14 +1,13 @@
 package com.itsukanov.common.restapi
 
-import cats.MonadThrow
+import cats.Functor
 import cats.effect.{BracketThrow, Concurrent, ContextShift, Timer}
 import cats.implicits._
 import io.janstenpickle.trace4cats.Span
 import io.janstenpickle.trace4cats.base.context.Provide
 import io.janstenpickle.trace4cats.inject.{EntryPoint, Trace}
 import io.janstenpickle.trace4cats.sttp.tapir.syntax._
-import org.http4s.client.UnexpectedStatus
-import org.http4s.{HttpRoutes, Status}
+import org.http4s.HttpRoutes
 import org.typelevel.log4cats.Logger
 import sttp.capabilities.WebSockets
 import sttp.capabilities.fs2.Fs2Streams
@@ -18,13 +17,8 @@ import sttp.tapir.server.http4s.{Http4sServerInterpreter, Http4sServerOptions}
 
 trait Endpoint2Rout {
 
-  implicit class GOps[G[_]: MonadThrow, T](gt: G[T]) {
+  implicit class GOps[G[_]: Functor, T](gt: G[T]) {
     def toEither = gt.map(_.asRight[ApiError])
-
-    def handle404: G[Option[T]] = gt.map(Option(_)).recover { case UnexpectedStatus(Status(404)) =>
-      Option.empty[T]
-    }
-
   }
 
   def logErrorWithTrace[T, O, G[_]: Trace](action: G[Either[ApiError, O]])(
