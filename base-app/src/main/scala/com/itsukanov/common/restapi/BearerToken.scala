@@ -11,5 +11,4 @@ object BearerToken {
     .string
     .mapDecode(x => DecodeResult.Value(BearerToken(x)))(_.token)
 
-  val default = BearerToken("123")
 }

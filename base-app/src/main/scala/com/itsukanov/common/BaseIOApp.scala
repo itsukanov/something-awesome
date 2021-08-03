@@ -18,7 +18,7 @@ trait BaseIOApp extends IOApp {
 
   implicit val cs: ContextShift[IO]     = IO.contextShift(scala.concurrent.ExecutionContext.global)
   implicit val t: Timer[IO]             = IO.timer(scala.concurrent.ExecutionContext.global)
-  implicit val bearerToken: BearerToken = BearerToken.default
+  implicit val bearerToken: BearerToken = Config.defaultToken
 
   def entryPoint[F[_]: Concurrent: ContextShift: Timer: Logger](
        blocker: Blocker,

@@ -3,7 +3,8 @@ package com.itsukanov.common.restapi
 case class ServerConfig(host: String, port: Int)
 
 object Config {
-  val localHost = "localhost"
+  val defaultToken = BearerToken("123")
+  val localHost    = "localhost"
 
   val entryPoint            = ServerConfig(localHost, 8080)
   val companyInfo           = ServerConfig(localHost, 8081)
