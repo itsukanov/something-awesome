@@ -38,8 +38,7 @@ trait Endpoint2Rout {
                        _.getOrElse(throw new RuntimeException("traceId is not set"))
                      ) // todo when traceId can be missing?
         _ <- L.error(thr)(s"TraceId = $traceId, ${thr.getMessage}")
-        apiError = InternalError.fromTraceId(traceId).asLeft[O]
-      } yield apiError
+      } yield InternalError.fromTraceId(traceId).asLeft[O]
     }
   }
 
