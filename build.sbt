@@ -13,9 +13,9 @@ scalacOptions in GlobalScope ++= Seq(
   "-deprecation"
 )
 
-val commonRestApi = (project in file("common-rest-api"))
+val baseApp = (project in file("base-app"))
   .settings(
-    name := "common-rest-api",
+    name := "base-app",
     libraryDependencies ++= Dependencies.commonDeps,
     addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
   )
@@ -26,18 +26,18 @@ val companyInfo = (project in file("company-info"))
     libraryDependencies ++= Dependencies.dbDeps,
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
-  ).dependsOn(commonRestApi)
+  ).dependsOn(baseApp)
 
 val companyPrices = (project in file("company-prices"))
   .settings(
     name := "company-prices",
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
-  ).dependsOn(commonRestApi)
+  ).dependsOn(baseApp)
 
 val entryPoint = (project in file("entry-point"))
   .settings(
     name := "entry-point",
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1"),
     addCompilerPlugin(("org.typelevel" %% "kind-projector" % "0.11.3").cross(CrossVersion.full))
-  ).dependsOn(commonRestApi)
+  ).dependsOn(baseApp)
