@@ -13,7 +13,7 @@ If in the result our customer got an error or waited for too long - how can we f
 
 Of course, we can check logs but it will be painful:
 - we need to check logs of different services
-- we need to collect events from them into a single chain responsible for exactly our customer's request (if we work under load it can be almost impossible because of too many requests)
+- we need to collect events from them into a single chain responsible for exactly our customer's request (if we work under load it can be almost impossible because of too many events)
 
 Things like [Jaeger](https://www.jaegertracing.io/) can help us to simplify this process.
 
@@ -30,16 +30,97 @@ Can we somehow improve it? [Tapir](https://github.com/softwaremill/tapir) says w
 
 
 # Architecture
-//<image>
 
-## Company-info app
+Let's build a simple application that will provide info about company shares.
 
-## Company-prices app
+![Architecture](./docs/tracing_architecture.png)
+
+As the final result we need to show to users something like -
+```json
+{
+   "name": "Apple Inc.",
+   "ticker": "AAPL",
+   "prices": [
+      148.99,
+      148.56,
+      146.8
+   ]
+}
+```
 
 ## Entrypoint app
 
+This application is the entry point for users. Its main responsibility is combining info from other services and handling possible failures.  
+
+## Company-info app
+
+It will provide common info about companies by interacting with Postgres. Two urls:
+
+1. list of all available companies, GET /company -
+```json
+[
+   {
+      "name": "Apple Inc.",
+      "ticker": "AAPL"
+   },
+   {
+      "name": "Microsoft Corporation",
+      "ticker": "MSFT"
+   }
+]
+```
+2. or the same info but for a particular share, GET /company/$ticker  -
+```json
+   {
+      "name": "Apple Inc.",
+      "ticker": "AAPL"
+   }
+```
+
+## Company-prices app
+
+Application responsible for prices for each share, GET /prices/$ticker -
+
+```json
+{
+  "prices": [
+    250.25,
+    249.02,
+    244.14
+  ]
+}
+```
 
 # Implementation details
+
+For rest api (server and client) we can use http4s. For interacting with Postgres doobie.
+
+Execution process could consist of:
+- Entrypoint receives a request
+- Entrypoint submits two requests (to Company-info and to Company-prices) in parallel
+- Company-prices replies with prices
+- Company-info gets common info from Postgres and replies
+- Entrypoint combines two results into one json and replies to the caller
+
+In an ideal world that would be enough but in the real world we can face different problems. For example:
+- network issues. DB or a service can be unavailable or respond for too long
+- any internal errors (e.g. integration with an unreliable third party service which we cannot make stable)
+
+Let's add [reties](./entry-point/src/main/scala/com/itsukanov/entrypoint/Retries.scala) to solve it.
+One main requests plus two retries - maximum of three attempts.
+
+To simulate problems we can add [ProblemsSimulator](./base-app/src/main/scala/com/itsukanov/common/problems/ProblemsSimulator.scala).
+As the default behaviour we will use [DefaultProblemsSimulator](./base-app/src/main/scala/com/itsukanov/common/problems/DefaultProblemsSimulator.scala) based on
+```scala
+new CombinedSimulator(
+    Seq(
+      (40, HappyPath),
+      (30, new TimedOut(5.seconds)),
+      (30, FailedWithError)
+    )
+  )
+```
+where numbers are probabilities (40% - success, 60% - failure).
 
 # Results
 
@@ -51,7 +132,7 @@ Can we somehow improve it? [Tapir](https://github.com/softwaremill/tapir) says w
 
 If you want to try it locally you need:
 
-1. installed docker
+1. installed docker, jre8+, and sbt
 
 2. start applications via
 ```bash
