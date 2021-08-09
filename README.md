@@ -1,9 +1,32 @@
 # Motivation
 
+As usual, I wanted to try new technologies and have up-to-date code examples written by me that might help me during a job interview.
+
+Most of my career I have worked with spark.
+As new technologies I decided to try something from the standard backend stack - rest api and microservices.
+
 ## Tracing
+
+The main aim.
+Let's say we have a product based on microservices. Our customer can click on a button - the button will call microservice A that service in its turn will call microservices B and C, B can interact with a database, and so on.
+If in the result our customer got an error or waited for too long - how can we find out where is the problem?
+
+Of course, we can check logs but it will be painful:
+- we need to check logs of different services
+- we need to collect events from them into a single chain responsible for exactly our customer's request (if we work under load it can be almost impossible because of too many requests)
+
+Things like [Jaeger](https://www.jaegertracing.io/) can help us to simplify this process.
+
+To interact with jaeger let's use [trace4cats](https://github.com/trace4cats/trace4cats).
 
 ## Swagger generation from code
 
+The secondary aim.
+To share api details with other teams we often use swagger. If we write both rest api and swagger ourselves it leads to problems:
+- code duplication (api implementation and its description)
+- a place for a mistake. You can change implementation and forget to change swagger or vice versa
+
+Can we somehow improve it? [Tapir](https://github.com/softwaremill/tapir) says we can. Let's try
 
 
 # Architecture
@@ -18,6 +41,11 @@
 
 # Implementation details
 
+# Results
+
+## Tracing
+
+## Swagger generation
 
 # Want to try it locally?
 
